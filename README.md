@@ -27,7 +27,7 @@ cd google-adk-course
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
-pip install google-adk langchain-tavily
+pip install -r requirements.txt
 ```
 
 ### API keys
