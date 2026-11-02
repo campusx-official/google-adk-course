@@ -13,6 +13,8 @@ Example agents built with Google's [Agent Development Kit (ADK)](https://google.
 | `tavily_search_agent` | Using a LangChain tool (Tavily search) in ADK through `LangchainTool` |
 | `combined_tool_agent` | One agent with a function tool, Google Search, code execution and Tavily together |
 | `campusx_refund_agent` | A course refund assistant that reads and writes a SQLite database and keeps state between turns |
+| `structured_output_agent` | Structured output with `output_schema`: pulls a student's name, email, courses of interest and budget out of an enquiry message |
+| `ticket_classifier_agent` | Structured output for classification: sorts support messages into a ticket with category, urgency and whether a human is needed |
 
 All agents use the `gemini-3.5-flash` model.
 
@@ -78,3 +80,17 @@ The agent's tools are in `campusx_refund_agent/tools.py`:
 - `get_refund_status` shows the status of a refund
 
 This is a demo. No real payments are made.
+
+## Structured output agents
+
+`structured_output_agent` and `ticket_classifier_agent` don't reply in free text. Each one defines a Pydantic model and passes it to the agent as `output_schema`, so every reply is JSON that matches the model. The result is also saved in session state under `output_key`.
+
+| Agent | Schema | State key | Fields |
+| --- | --- | --- | --- |
+| `structured_output_agent` | `Enquiry` | `enquiry` | `name`, `email`, `interested_in` (GenAI, Data Science, MLOps, Deep Learning, Other), `budget_inr` |
+| `ticket_classifier_agent` | `Ticket` | `ticket` | `category` (refund, technical, course_query, payment, other), `urgency` (low, medium, high), `needs_human` |
+
+Example messages to try:
+
+- Enquiry: `Hi, I'm rahul sharma (rahul@example.com). I want to learn GenAI and MLOps, budget around 15k.`
+- Ticket: `I paid twice for the Data Science course and nobody is replying. Please fix this now!`

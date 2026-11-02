@@ -1,0 +1,8 @@
+google-adk[mcp]==2.12.0
+
+# Preinstalled so the agent can build and test the todo app
+# without needing "pip install" (which requires approval).
+fastapi
+uvicorn
+httpx
+pytest
