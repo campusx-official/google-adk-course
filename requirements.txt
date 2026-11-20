@@ -1,2 +1,4 @@
 google-adk==2.12.0
 langchain-tavily==0.2.18
+streamlit==1.66.1
+aiosqlite==0.22.1

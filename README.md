@@ -146,10 +146,9 @@ cd session_runner_demo && python run_agent.py
 cd state_demo && python run_agent.py
 ```
 
-`runner_chatbot_demo` is a Streamlit app. Install Streamlit and the async SQLite driver, then start it:
+`runner_chatbot_demo` is a Streamlit app:
 
 ```bash
-pip install streamlit aiosqlite
 cd runner_chatbot_demo && streamlit run app.py
 ```
 
