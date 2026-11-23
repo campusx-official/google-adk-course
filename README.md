@@ -1,6 +1,6 @@
 # Google ADK Course
 
-Example agents built with Google's [Agent Development Kit (ADK)](https://google.github.io/adk-docs/) for the CampusX course. The examples start with a single built-in tool and build up to MCP servers, sessions, state, memory and callbacks.
+Example agents built with Google's [Agent Development Kit (ADK)](https://google.github.io/adk-docs/) for the CampusX course. The examples start with a single built-in tool and build up to MCP servers, sessions, state, memory, callbacks and streaming.
 
 ## Examples
 
@@ -47,6 +47,12 @@ Example agents built with Google's [Agent Development Kit (ADK)](https://google.
 | `callbacks_demo` | `before_tool_callback` and `after_tool_callback`: skipping a tool, changing its arguments and overriding its result |
 | `campusx_callbacks_bot` | A student support bot that uses callbacks for state setup, personalization, authorization, caching, rate limiting and a guardrail |
 
+### Streaming
+
+| Folder | What it shows |
+| --- | --- |
+| `streaming_demo` | Streaming replies piece by piece with `StreamingMode.SSE`, and a streaming tool that sends progress updates while it runs. Includes a terminal script and a Streamlit chat app |
+
 All agents use the `gemini-3.5-flash` model.
 
 ## Setup
@@ -83,7 +89,7 @@ Some examples need extra keys in the same `.env`:
 | `coding_agent` | `GITHUB_PAT` (optional), a fine-grained GitHub token |
 | `memory_demo` (Memory Bank only) | `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, `MEMORY_BANK_ID` |
 
-For the script-based demos, the `.env` goes in the inner agent folder, for example `state_demo/state_agent/.env`.
+For the script-based demos, the `.env` goes in the inner agent folder, for example `state_demo/state_agent/.env` or `streaming_demo/streaming_bot/.env`.
 
 ## Running an agent
 
@@ -199,3 +205,21 @@ python delete_memories.py         # clear them
 | `check_ticket_limit` / `update_ticket_count` | before / after tool | Allows one support ticket per session |
 
 Things to try: "What courses do you have?" twice (the second answer comes from the cache), "Show enrollments for priya@example.com" (blocked), and asking for two support tickets (the second is refused).
+
+## Streaming demo
+
+`streaming_demo/streaming_bot` is a chatbot with one tool, `get_weather`. The tool is an async generator: each `yield Event(message=..., partial=True)` sends a progress update to the user straight away, and the final `yield` of a dict is the result the model sees. The weather data is made up.
+
+Streaming is turned on by passing `run_config=RunConfig(streaming_mode=StreamingMode.SSE)` to `runner.run()`. The reply then arrives as many events with `partial=True`, each holding a piece of text.
+
+Run it from inside the folder:
+
+```bash
+cd streaming_demo
+python run_stream.py        # prints the reply in the terminal as it arrives
+streamlit run app.py        # chat app that streams the reply with st.write_stream
+```
+
+`run_stream.py` asks for the weather in Delhi and three things to do there, so you see a tool call and a streamed reply. It also has an `ask()` function that waits for the whole reply, for comparison.
+
+In `app.py`, text from the model is streamed into the chat, while tool calls and the tool's progress updates are shown as toasts. Try "What's the weather in Delhi?"
