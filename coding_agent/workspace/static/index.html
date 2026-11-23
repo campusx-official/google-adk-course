@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .todo-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .todo-form input, .todo-form button {
+            padding: 10px;
+            font-size: 14px;
+        }
+        .todo-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .todo-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .completed-text {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .delete-btn {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .toggle-checkbox {
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        .left-content {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Todo App</h1>
+    
+    <form class="todo-form" id="todoForm">
+        <input type="text" id="titleInput" placeholder="Todo Title" required>
+        <input type="text" id="descriptionInput" placeholder="Description (optional)">
+        <button type="submit">Add Todo</button>
+    </form>
+
+    <ul class="todo-list" id="todoList"></ul>
+
+    <script>
+        const todoForm = document.getElementById('todoForm');
+        const titleInput = document.getElementById('titleInput');
+        const descriptionInput = document.getElementById('descriptionInput');
+        const todoList = document.getElementById('todoList');
+
+        async function fetchTodos() {
+            try {
+                const res = await fetch('/todos');
+                const todos = await res.json();
+                renderTodos(todos);
+            } catch (err) {
+                console.error('Error fetching todos:', err);
+            }
+        }
+
+        function renderTodos(todos) {
+            todoList.innerHTML = '';
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.className = 'todo-item';
+
+                const leftContent = document.createElement('div');
+                leftContent.className = 'left-content';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'toggle-checkbox';
+                checkbox.checked = todo.completed;
+                checkbox.addEventListener('change', () => toggleTodo(todo.id));
+
+                const details = document.createElement('div');
+                details.className = 'todo-details';
+
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent = todo.title;
+                if (todo.completed) {
+                    titleSpan.className = 'completed-text';
+                }
+
+                details.appendChild(titleSpan);
+
+                if (todo.description) {
+                    const descSpan = document.createElement('small');
+                    descSpan.textContent = todo.description;
+                    if (todo.completed) {
+                        descSpan.className = 'completed-text';
+                    } else {
+                        descSpan.style.color = '#666';
+                    }
+                    details.appendChild(descSpan);
+                }
+
+                leftContent.appendChild(checkbox);
+                leftContent.appendChild(details);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
+
+                li.appendChild(leftContent);
+                li.appendChild(deleteBtn);
+                todoList.appendChild(li);
+            });
+        }
+
+        todoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = titleInput.value.trim();
+            const description = descriptionInput.value.trim() || null;
+
+            if (!title) return;
+
+            try {
+                const res = await fetch('/todos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description })
+                });
+                if (res.ok) {
+                    titleInput.value = '';
+                    descriptionInput.value = '';
+                    fetchTodos();
+                }
+            } catch (err) {
+                console.error('Error adding todo:', err);
+            }
+        });
+
+        async function toggleTodo(id) {
+            try {
+                const res = await fetch(`/todos/${id}/toggle`, {
+                    method: 'PATCH'
+                });
+                if (res.ok) {
+                    fetchTodos();
+                }
+            } catch (err) {
+                console.error('Error toggling todo:', err);
+            }
+        }
+
+        async function deleteTodo(id) {
+            try {
+                const res = await fetch(`/todos/${id}`, {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    fetchTodos();
+                }
+            } catch (err) {
+                console.error('Error deleting todo:', err);
+            }
+        }
+
+        fetchTodos();
+    </script>
+</body>
+</html>
